@@ -29,9 +29,7 @@ public class Parser {
         if (words.length - 1 > 1) {
             System.out.println("cd command accepts at most one parameter");
             return false;
-        }
-        if (words.length - 1 == 0)                  /// only cd found, Default directory
-        {
+        } else if (words.length - 1 == 0) {                 /// only cd found, Default directory
             cmd = "cd";
             args.add("C:\\");
             return true;

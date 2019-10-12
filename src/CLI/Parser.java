@@ -1,42 +1,51 @@
 package CLI;
 
-import java.util.Vector;
-
 public class Parser {
-    private Vector<String> args = new Vector<>();
+    private String[] args;
     private String cmd;
 
     public boolean parse(String input) {
-        String[] words = input.split(" ");
-        String command = words[0];
-        if (isCommand(command)) {
-            if (command.equals("cd")) {
-                return __handleCd(words);
-            }
+        String[] words = input.split(" ", 2);
+        cmd = words[0];
+        if(words.length > 1) args = words[1].split(" ");
+        if (isCommand()) {
+            if (cmd.equals("cd")) return handleCd();
+            else if(cmd.equals("ls")) return handleLs();
+
         }
         return false;
     }
 
 
-    private boolean isCommand(String input) {
-        return input.equals("cd") || input.equals("ls") || input.equals("cp") || input.equals("cat") || input.equals("more") ||
-                input.equals("mkdir") || input.equals("rmdir") || input.equals("mv") || input.equals("rm") ||
-                input.equals("args") || input.equals("date") || input.equals("help")
-                || input.equals("pwd") || input.equals("clear");
+    private boolean isCommand() {
+        return cmd.equals("cd") || cmd.equals("ls") || cmd.equals("cp") || cmd.equals("cat") || cmd.equals("more") ||
+                cmd.equals("mkdir") || cmd.equals("rmdir") || cmd.equals("mv") || cmd.equals("rm") ||
+                cmd.equals("args") || cmd.equals("date") || cmd.equals("help")
+                || cmd.equals("pwd") || cmd.equals("clear");
     }
 
-    private boolean __handleCd(String[] words) {
-        if (words.length - 1 > 1) {
+
+    private boolean handleCd() {
+        if (args.length > 1) {
             System.out.println("cd command accepts at most one parameter");
             return false;
-        } else if (words.length - 1 == 0) {                 /// only cd found, Default directory
-            cmd = "cd";
-            args.add("C:\\");
-            return true;
         } else {
-            cmd = "cd";
-            args.add(words[1]);
+            if(args.length == 0) {
+                args = new String[1];
+                args[0] = "C:\\";
+            }
             return true;
         }
     }
+
+    private boolean handleLs() {
+        if(args.length > 1) {
+            System.out.println("ERROR: command \"ls\" takes at most 1 argument.");
+            return false;
+        }
+        return true;
+    }
+
+    public String getCmd() { return cmd; }
+    public String[] getArgs() { return args; }
 }

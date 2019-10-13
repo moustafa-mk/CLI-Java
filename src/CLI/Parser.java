@@ -11,7 +11,6 @@ public class Parser {
         if (isCommand()) {
             if (cmd.equals("cd")) return handleCd();
             else if(cmd.equals("ls")) return handleLs();
-
         }
         return false;
     }
@@ -38,6 +37,7 @@ public class Parser {
         }
     }
 
+
     private boolean handleLs() {
         if(args.length > 1) {
             System.out.println("ERROR: command \"ls\" takes at most 1 argument.");
@@ -46,6 +46,21 @@ public class Parser {
         return true;
     }
 
+    private boolean handlePwd()
+    {
+        if(args.length==0) return true;
+        System.out.println("pwd command takes no arguments");
+        return false;
+    }
+
+
+    private boolean handleCat(){
+        if(args.length==0){
+            System.out.println("car command takes at least 1 argument");
+            return false;
+        }
+        return true;
+    }
     public String getCmd() { return cmd; }
     public String[] getArgs() { return args; }
 }

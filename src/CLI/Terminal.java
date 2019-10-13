@@ -49,4 +49,19 @@ class Terminal {
             fw.flush();
         }
     }
+
+    void cp(String[] args) throws IOException {
+        String dir = args[args.length - 1];
+        for (int i = 0; i < args.length - 1; i++) {
+            cp(args[i], dir + args[i]);
+        }
+    }
+
+    void rm(String[] args) {
+        for (String arg : args) {
+            arg = setFilePath(arg);
+            File file = new File(arg);
+            if (!file.delete()) System.out.println("Error deleting file.");
+        }
+    }
 }

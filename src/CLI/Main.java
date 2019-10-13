@@ -1,8 +1,12 @@
 package CLI;
 
+import java.util.Scanner;
+
 public class Main {
     public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.nextLine();
         Parser parser = new Parser();
-        parser.parse("cp C:\\Users\\Moustafa\\IdeaProjects\\src.txt C:\\Users\\Moustafa\\IdeaProjects\\dest.txt");
+        parser.parse(input);
     }
 }

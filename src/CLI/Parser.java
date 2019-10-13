@@ -5,6 +5,7 @@ import java.io.IOException;
 public class Parser {
     private String[] args;
     private String cmd;
+    private Terminal terminal = new Terminal();
 
     boolean parse(String input) {
         String[] words = input.split(" ", 2);
@@ -18,6 +19,12 @@ public class Parser {
                     return handleLs();
                 case "cp":
                     return handleCp();
+                case "cat":
+                    return handleCat();
+                case "pwd":
+                    return handlePwd();
+                case "rm":
+                    return handleRm();
             }
         }
         return false;
@@ -76,13 +83,25 @@ public class Parser {
             return false;
         }
 
-        Terminal terminal = new Terminal();
         try {
-            terminal.cp(args[0], args[1]);
+            if (args.length == 2)
+                terminal.cp(args[0], args[1]);
+            else
+                terminal.cp(args);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+        return true;
+    }
+
+    private boolean handleRm() {
+        if (args.length == 0) {
+            System.out.println("rm command takes at least one argument");
+            return false;
+        }
+
+        terminal.rm(args);
         return true;
     }
 

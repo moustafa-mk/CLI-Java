@@ -2,21 +2,33 @@ package CLI;
 
 import java.io.*;
 
-public class Terminal {
+class Terminal {
     private String currDirectory;
 
     Terminal() {
         currDirectory = "C:\\";
     }
 
-    public void cp(String SourthPath, String DestinationPath) throws IOException // Didn't check if they already have directory or not, need the path helper func
+    private String setFilePath(String FileName) {
+        File file = new File(FileName);
+        if (FileName.equals(file.getAbsolutePath())) return FileName;
+        else return currDirectory + FileName;
+    }
+
+    void cp(String SourcePath, String DestinationPath) throws IOException // Didn't check if they already have directory or not, need the path helper func
     {
-        File file = new File(currDirectory + SourthPath);
+        SourcePath = setFilePath(SourcePath);
+        DestinationPath = setFilePath(DestinationPath);
+
+        File file = new File(SourcePath);
+
         if (!file.exists()) {
             System.out.println("Couldn't find this file/directory");
             return;
         }
-        file = new File(currDirectory + DestinationPath);
+
+        file = new File(DestinationPath);
+
         if (!file.exists()) {
             Boolean check = file.createNewFile();
             if (check) {
@@ -26,10 +38,12 @@ public class Terminal {
                 return;
             }
         }
-        FileReader fr = new FileReader(currDirectory + SourthPath);
+
+        FileReader fr = new FileReader(SourcePath);
         BufferedReader br = new BufferedReader(fr);
-        FileWriter fw = new FileWriter(currDirectory + DestinationPath, true);
+        FileWriter fw = new FileWriter(DestinationPath, true);
         String s;
+
         while ((s = br.readLine()) != null) {
             fw.write(s);
             fw.flush();

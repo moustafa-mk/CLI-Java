@@ -1,16 +1,24 @@
 package CLI;
 
+import java.io.IOException;
+
 public class Parser {
     private String[] args;
     private String cmd;
 
-    public boolean parse(String input) {
+    boolean parse(String input) {
         String[] words = input.split(" ", 2);
         cmd = words[0];
         if(words.length > 1) args = words[1].split(" ");
         if (isCommand()) {
-            if (cmd.equals("cd")) return handleCd();
-            else if(cmd.equals("ls")) return handleLs();
+            switch (cmd) {
+                case "cd":
+                    return handleCd();
+                case "ls":
+                    return handleLs();
+                case "cp":
+                    return handleCp();
+            }
         }
         return false;
     }
@@ -56,11 +64,28 @@ public class Parser {
 
     private boolean handleCat(){
         if(args.length==0){
-            System.out.println("car command takes at least 1 argument");
+            System.out.println("cat command takes at least 1 argument");
             return false;
         }
         return true;
     }
+
+    private boolean handleCp() {
+        if (args.length < 2) {
+            System.out.println("cp command takes at least two arguments");
+            return false;
+        }
+
+        Terminal terminal = new Terminal();
+        try {
+            terminal.cp(args[0], args[1]);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return true;
+    }
+
     public String getCmd() { return cmd; }
     public String[] getArgs() { return args; }
 }

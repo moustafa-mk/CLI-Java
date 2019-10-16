@@ -1,6 +1,7 @@
 package CLI;
 
 import java.io.IOException;
+import java.util.Vector;
 
 public class Parser {
     private String[] args = new String[]{};
@@ -43,6 +44,32 @@ public class Parser {
         }
         return false;
     }
+
+
+    boolean pipe(String input) throws IOException {
+
+        Vector<String> line = new Vector();
+        String[] check = input.split("|");
+        String a = new String();
+        for (String tmp : check) {
+
+            if (tmp.equals("|")) {
+                line.add(a);
+                a = new String();
+                continue;
+            }
+            a += tmp;
+
+        }
+        line.add(a);
+        for (int i = 0; i < line.size(); i++) {
+            parse(line.elementAt(i));
+            args = new String[]{};
+        }
+
+        return true;
+    }
+
 
 
     private boolean isCommand() {

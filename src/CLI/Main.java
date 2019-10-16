@@ -9,7 +9,7 @@ public class Main {
         String input = scanner.nextLine();
         Parser parser = new Parser();
         try {
-            parser.parse(input);
+            parser.pipe(input);
         } catch (IOException e) {
             e.printStackTrace();
         }

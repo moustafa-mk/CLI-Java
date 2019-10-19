@@ -1,5 +1,6 @@
 package CLI;
 
+import java.io.FileWriter;
 import java.io.IOException;
 
 public class Parser {
@@ -8,10 +9,15 @@ public class Parser {
     private Terminal terminal = new Terminal();
     private boolean Exit = false;
 
-    boolean parse(String input) throws IOException {
+    private String parse(String input, String output) throws Exception {
+        input = input.substring(0, input.length() - 1);
         String[] words = input.split(" ", 2);
         cmd = words[0];
         if(words.length > 1) args = words[1].split(" ");
+        if (output != null) {
+            cmd = args[0];
+            args[0] = output;
+        }
         if (isCommand()) {
             switch (cmd) {
                 case "clear":
@@ -38,12 +44,75 @@ public class Parser {
                     return handleDate();
                 case "exit":
                     Exit = true;
-                    return true;
+                    return "";
             }
         }
-        return false;
+        return "";
     }
 
+    void parseWrap(String input) throws Exception {
+        String[] splitted = input.split(" ");
+        StringBuilder sb = new StringBuilder();
+        boolean pipe = false, redirect = false, app = false;
+        String output = null;
+        for (String word :
+                splitted) {
+            switch (word) {
+                case ">":
+                    if (pipe) {
+                        output = parse(sb.toString(), output);
+                        pipe = false;
+                    } else {
+                        output = parse(sb.toString(), null);
+                    }
+                    redirect = true;
+                    app = false;
+                    System.out.println(output);
+                    break;
+                case ">>":
+                    if (pipe) {
+                        output = parse(sb.toString(), output);
+                        pipe = false;
+                    } else {
+                        output = parse(sb.toString(), null);
+                    }
+                    redirect = true;
+                    app = true;
+                    System.out.println(output);
+                    break;
+                case "|":
+                    if (pipe) {
+                        output = parse(sb.toString(), output);
+                    } else if (redirect) {
+                        output = redirect(sb.toString(), output, app);
+                        redirect = false;
+                        app = false;
+                    } else output = parse(sb.toString(), null);
+                    pipe = true;
+                    sb = new StringBuilder();
+                    sb.append(word).append(" ");
+                    System.out.println(output);
+                    break;
+                default:
+                    sb.append(word).append(" ");
+                    break;
+            }
+        }
+        if (pipe) {
+            parse(sb.toString(), output);
+        } else if (redirect) {
+            redirect(sb.toString(), output, app);
+        } else {
+            parse(sb.toString(), null);
+        }
+    }
+
+    private String redirect(String file, String output, boolean app) throws IOException {
+        FileWriter fw = new FileWriter(terminal.setFilePath(file), app);
+        fw.write(output);
+        fw.close();
+        return terminal.setFilePath(file);
+    }
 
     private boolean isCommand() {
         return cmd.equals("cd") || cmd.equals("ls") || cmd.equals("cp") || cmd.equals("cat") || cmd.equals("more") ||
@@ -53,129 +122,119 @@ public class Parser {
     }
 
 
-    private boolean handleClear() {
+    private String handleClear() {
         if (args.length > 0) {
             System.out.println("clear command doesn't take any arguments");
-            return false;
+            return null;
         }
 
-        terminal.clear();
-        return true;
+        return terminal.clear();
     }
 
-    private boolean handlePwd() {
+    private String handlePwd() {
         if (args.length > 0) {
             System.out.println("pwd command doesn't take any arguments.");
-            return false;
+            return null;
         }
 
-        terminal.pwd();
-        return true;
+        return terminal.pwd();
     }
 
-    private boolean handleCd() {
+    private String handleCd() throws Exception {
         if (args.length > 1) {
             System.out.println("cd command accepts at most one parameter");
-            return false;
+            return null;
         } else {
             if(args.length == 0) {
                 args = new String[1];
                 args[0] = "C:\\";
             }
 
-            terminal.cd(args);
-            return true;
+            return terminal.cd(args);
         }
     }
 
 
-    private boolean handleLs() throws IOException {
+    private String handleLs() throws IOException {
         if(args.length > 1) {
             System.out.println("ERROR: command \"ls\" takes at most 1 argument.");
-            return false;
+            return null;
         }
 
-        if (args.length == 1) terminal.ls(args[0]);
-        else terminal.ls();
-        return true;
+        if (args.length == 1) return terminal.ls(args[0]);
+        else return terminal.ls();
     }
 
-    private boolean handleCat(){
+    private String handleCat() {
         if(args.length==0){
             System.out.println("cat command takes at least 1 argument");
-            return false;
+            return null;
         }
-        return true;
+        //ToDo handle CAT
+        return null;
     }
 
-    private boolean handleCp() throws IOException {
+    private String handleCp() throws Exception {
         if (args.length < 2) {
             System.out.println("cp command takes at least two arguments");
-            return false;
+            return null;
         }
 
         if (args.length == 2)
-            terminal.cp(args[0], args[1]);
+            return terminal.cp(args[0], args[1]);
         else
-            terminal.cp(args);
-
-        return true;
+            return terminal.cp(args);
     }
 
-    private boolean handleRm() {
+    private String handleRm() {
         if (args.length == 0) {
             System.out.println("rm command takes at least one argument");
-            return false;
+            return null;
         }
 
-        terminal.rm(args);
-        return true;
+        return terminal.rm(args);
     }
 
-    private boolean handleMv() throws IOException {
+    private String handleMv() throws Exception {
         if (args.length != 2) {
             System.out.println("mv command takes at two arguments");
-            return false;
+            return null;
         }
 
-        terminal.mv(args[0], args[1]);
-        return true;
+        return terminal.mv(args[0], args[1]);
     }
 
-    private boolean handleMkdir() {
+    private String handleMkdir() {
         if (args.length == 0) {
             System.out.println("mkdir command takes at least one argument");
-            return false;
+            return null;
         }
 
-        terminal.mkdir(args);
-        return true;
+        return terminal.mkdir(args);
     }
 
-    private boolean handleRmdir() throws IOException {
+    private String handleRmdir() {
         if (args.length == 0) {
             System.out.println("rmdir command takes at least one argument");
-            return false;
+            return null;
         }
 
-        terminal.rmdir(args);
-        return true;
+        return terminal.rmdir(args);
     }
 
-    private boolean handleDate() {
+    private String handleDate() {
         if (args.length > 0) {
             System.out.println("date command doesn't take any arguments.");
-            return false;
+            return null;
         }
 
-        terminal.Date();
-        return true;
+        return terminal.Date();
     }
 
     public String getCmd() { return cmd; }
     public String[] getArgs() { return args; }
 
-    public boolean isExit() {
+    boolean isExit() {
         return Exit;
     }
 }

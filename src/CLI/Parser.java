@@ -45,6 +45,15 @@ public class Parser {
             args[0] = output;
         }
 
+        if (cmd.equals("|")) {
+            cmd = args[0];
+
+            String[] newArgs = new String[args.length - 1];
+            System.arraycopy(args, 1, newArgs, 0, args.length - 1);
+
+            args = newArgs.clone();
+        }
+
         if (isCommand()) {
             switch (cmd) {
                 case "clear":
@@ -101,7 +110,6 @@ public class Parser {
                     }
                     redirect = true;
                     app = false;
-                    System.out.println(output);
                     break;
                 case ">>":
                     if (pipe) {
@@ -112,7 +120,6 @@ public class Parser {
                     }
                     redirect = true;
                     app = true;
-                    System.out.println(output);
                     break;
                 case "|":
                     if (pipe) {
@@ -125,7 +132,6 @@ public class Parser {
                     pipe = true;
                     sb = new StringBuilder();
                     sb.append(word).append(" ");
-                    System.out.println(output);
                     break;
                 default:
                     sb.append(word).append(" ");
@@ -182,9 +188,11 @@ public class Parser {
             if(args.length == 0) {
                 args = new String[1];
                 args[0] = "C:\\";
+                return terminal.cd(args);
             }
 
-            return terminal.cd(args);
+            terminal.cd(args);
+            return null;
         }
     }
 
@@ -231,10 +239,6 @@ public class Parser {
 
     private String handleMore() throws IOException {
         if (args.length != 1) {
-            for (String s :
-                    args) {
-                System.out.println(s);
-            }
             System.out.println("more command takes 1 argument.");
             return null;
         }

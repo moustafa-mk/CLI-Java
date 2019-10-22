@@ -48,7 +48,6 @@ class Terminal {
         StringBuilder sb = new StringBuilder();
         Files.list(new File(dirName).toPath())
                 .forEach(path -> {
-                    System.out.println(path);
                     sb.append(path).append("\n");
                     ret.getAndIncrement();
                 });
@@ -147,7 +146,7 @@ class Terminal {
 
         do {
             for (int i = 0; i < 10; i++) if (scanner.hasNextLine()) System.out.println(scanner.nextLine());
-            sysScanner.next();
+            sysScanner.nextLine();
         } while (scanner.hasNextLine());
     }
 

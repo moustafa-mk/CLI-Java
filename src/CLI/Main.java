@@ -7,11 +7,14 @@ public class Main {
         Scanner scanner = new Scanner(System.in);
         Parser parser = new Parser();
         while (!parser.isExit()) {
-            String input = scanner.nextLine();
-            try {
-                parser.parseWrap(input);
-            } catch (Exception e) {
-                e.printStackTrace();
+            String input;
+            if (scanner.hasNextLine()) {
+                input = scanner.nextLine();
+                try {
+                    parser.parseWrap(input);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

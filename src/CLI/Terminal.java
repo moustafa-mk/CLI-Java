@@ -1,9 +1,16 @@
 package CLI;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 class Terminal {
     private String currDirectory;
@@ -60,6 +67,8 @@ class Terminal {
         File file = new File(SourcePath);
 
         if (!file.exists()) {
+            System.out.println(SourcePath);
+            System.out.println(DestinationPath);
             throw new Exception("Couldn't find this file/directory");
         }
 
@@ -131,9 +140,171 @@ class Terminal {
         return args[args.length - 1];
     }
 
-    //ToDo Make Cat function
+    void more(String input) {
 
-    //ToDo Make Args function
+        Scanner scanner = new Scanner(input);
+        Scanner sysScanner = new Scanner(System.in);
+
+        do {
+            for (int i = 0; i < 10; i++) if (scanner.hasNextLine()) System.out.println(scanner.nextLine());
+            sysScanner.next();
+        } while (scanner.hasNextLine());
+    }
+
+    void more(File file) throws IOException {
+        Stream<String> stream = Files.lines(Paths.get(file.getAbsolutePath()), StandardCharsets.UTF_8);
+        StringBuilder fileContents = new StringBuilder();
+        stream.forEach(s -> fileContents.append(s).append("\n"));
+
+        more(fileContents.toString());
+    }
+
+    String cat(String[] args) throws Exception {
+        Boolean check = false;
+        List<String> left = new ArrayList<>();
+        List<String> right = new ArrayList<>();
+
+        int i;
+        for (i = 0; i < args.length; ++i) {
+            if (args[i].charAt(0) == '>') {
+                check = true;
+                break;
+            }
+        }
+
+        if (check) {
+            left.addAll(Arrays.asList(args).subList(0, i));
+            right.addAll(Arrays.asList(args).subList(i, args.length));
+        }
+
+
+        if (left.size() == 0 && right.size() == 1) {         // aka create new file
+            args[0] = setFilePath(args[0].substring(1, args[0].length()));
+            File file = new File(args[0]);
+
+            if (!(file.exists())) file.createNewFile();
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(System.in, "UTF-8"));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(args[0]));
+
+            String line;
+            while (!(line = in.readLine()).equals("\\0")) {
+                writer.write(line);
+            }
+
+            writer.close();
+            return file.getAbsolutePath();
+        } else if (left.size() > 0 && right.size() == 1) {      // Copy contents of multiple files to one file
+            StringBuilder temp = new StringBuilder();
+            String line;
+
+            for (i = 0; i < left.size(); ++i) {
+                left.set(i, setFilePath(left.get(i)));
+                File e = new File(left.get(i));
+
+                if (!(e.exists())) continue;
+
+                BufferedReader r = new BufferedReader(new FileReader(left.get(i)));
+                line = r.readLine();
+
+                while (line != null) {
+                    temp.append(line);
+                    temp.append('\n');
+                    line = r.readLine();
+                }
+
+                r.close();
+            }
+            /*right.set(0,setFilePath(right.get(0)));*/
+            File f = new File(right.get(0));
+            if (!(f.exists())) f.createNewFile();
+
+            BufferedWriter w = new BufferedWriter(new FileWriter(right.get(0)));
+            w.write(temp.toString());
+            w.close();
+
+            return f.getAbsolutePath();
+        } else if (!check) {          // aka view contents of file
+            StringBuilder sb = new StringBuilder();
+
+            for (i = 0; i < args.length; ++i) {
+                args[i] = setFilePath(args[i]);
+                File f = new File(args[i]);
+
+                if (!(f.exists())) {
+                    throw new Exception("File " + f.getAbsolutePath() + " Not Found");
+                }
+
+                BufferedReader r = new BufferedReader(new FileReader(args[i]));
+                String line;
+                line = r.readLine();
+
+                while (line != null) {
+                    sb.append(line).append('\n');
+                    line = r.readLine();
+                }
+                r.close();
+
+            }
+            return sb.toString();
+        } else {
+            throw new Exception("Invalid arguments");
+        }
+    }
+
+    String Args(String cmd) throws Exception {
+        switch (cmd) {
+            case "cp":
+                return ("arg1: Source Path\narg2: Destination Path\n");
+            case "cd":
+                return ("[arg1: Directory = Current Directory\n]");
+            case "ls":
+                return ("[arg1: Destination Directory = Current Directory]\n");
+            case "mv":
+                return ("arg1: Source Path\narg2: Destination Path\n");
+            case "rm":
+                return ("args: File1 [File2] [File3]...\n");
+            case "mkdir":
+                return ("args: Dir1 [Dir2] [Dir3]...\n");
+            case "rmdir":
+                return ("args: Dir1 [Dir2] [Dir3]...\n");
+            case "more":
+                return ("args: fileName/Text\n");
+            case "cat":
+                return ("args: File1 [File2] [File3]...\n");
+            case "pwd":
+                return ("pwd command doesn't take any arguments\n");
+            case "clear":
+                return ("pwd command doesn't take any arguments\n");
+            case "date":
+                return ("pwd command doesn't take any arguments\n");
+            case "help":
+                return ("pwd command doesn't take any arguments\n");
+            case "args":
+                return ("arg1: cmd\n");
+            default:
+                throw new Exception("argument not valid.");
+        }
+    }
+
+    String Help() {
+
+        return "args: prints syntax of arguments of a command\n" +
+                "cat: reads and outputs contents of file(s)\n" +
+                "cd: changes current directory\n" +
+                "clear: clears console window\n" +
+                "cp: copies contents of a file(s) into another file/directory\n" +
+                "date: prints current date and time\n" +
+                "exit: Stop all\n" +
+                "help: prints this help message\n" +
+                "ls: lists contents of directory\n" +
+                "mkdir: makes a directory(s)\n" +
+                "more: outputs contents of input/file 10 lines at a time\n" +
+                "mv: moves a file to a directory\n" +
+                "pwd: prints current directory\n" +
+                "rm: removes a file\n" +
+                "rmdir: removes a directory(s)\n";
+    }
 
     String Date() {
         return (LocalDateTime.now().toString());

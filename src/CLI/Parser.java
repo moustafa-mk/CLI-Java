@@ -1,5 +1,6 @@
 package CLI;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Vector;
@@ -11,14 +12,39 @@ public class Parser {
     private boolean Exit = false;
 
     private String parse(String input, String output) throws Exception {
-        input = input.substring(0, input.length() - 1);
-        String[] words = input.split(" ", 2);
-        cmd = words[0];
-        if(words.length > 1) args = words[1].split(" ");
+        Vector<String> splittedVector = new Vector<>();
+        boolean skipws = true;
+
+        StringBuilder sb = new StringBuilder();
+        for (char ch :
+                input.toCharArray()) {
+            if (ch == '\"') {
+                skipws = !skipws;
+                continue;
+            }
+            if (ch == ' ' && skipws) {
+                splittedVector.add(sb.toString());
+                sb = new StringBuilder();
+                continue;
+            }
+
+            sb.append(ch);
+        }
+
+        if (sb.toString().length() > 0) splittedVector.add(sb.toString());
+
+        String[] splitted = new String[splittedVector.size()];
+        splittedVector.copyInto(splitted);
+
+        cmd = splitted[0];
+        args = new String[splitted.length - 1];
+        System.arraycopy(splitted, 1, args, 0, splitted.length - 1);
+
         if (output != null) {
             cmd = args[0];
             args[0] = output;
         }
+
         if (isCommand()) {
             switch (cmd) {
                 case "clear":
@@ -35,6 +61,8 @@ public class Parser {
                     return handleCat();
                 case "rm":
                     return handleRm();
+                case "more":
+                    return handleMore();
                 case "mv":
                     return handleMv();
                 case "mkdir":
@@ -43,6 +71,10 @@ public class Parser {
                     return handleRmdir();
                 case "date":
                     return handleDate();
+                case "args":
+                    return handleArgs();
+                case "help":
+                    return handleHelp();
                 case "exit":
                     Exit = true;
                     return "";
@@ -53,6 +85,7 @@ public class Parser {
 
     void parseWrap(String input) throws Exception {
         String[] splitted = input.split(" ");
+
         StringBuilder sb = new StringBuilder();
         boolean pipe = false, redirect = false, app = false;
         String output = null;
@@ -100,11 +133,11 @@ public class Parser {
             }
         }
         if (pipe) {
-            parse(sb.toString(), output);
+            System.out.println(parse(sb.toString(), output));
         } else if (redirect) {
             redirect(sb.toString(), output, app);
         } else {
-            parse(sb.toString(), null);
+            System.out.println(parse(sb.toString(), null));
         }
     }
 
@@ -115,37 +148,11 @@ public class Parser {
         return terminal.setFilePath(file);
     }
 
-    boolean pipe(String input) throws IOException {
-
-        Vector<String> line = new Vector();
-        String[] check = input.split("|");
-        String a = new String();
-        for (String tmp : check) {
-
-            if (tmp.equals("|")) {
-                line.add(a);
-                a = new String();
-                continue;
-            }
-            a += tmp;
-
-        }
-        line.add(a);
-        for (int i = 0; i < line.size(); i++) {
-            parse(line.elementAt(i));
-            args = new String[]{};
-        }
-
-        return true;
-    }
-
-
-
     private boolean isCommand() {
         return cmd.equals("cd") || cmd.equals("ls") || cmd.equals("cp") || cmd.equals("cat") || cmd.equals("more") ||
                 cmd.equals("mkdir") || cmd.equals("rmdir") || cmd.equals("mv") || cmd.equals("rm") ||
                 cmd.equals("args") || cmd.equals("date") || cmd.equals("help")
-                || cmd.equals("pwd") || cmd.equals("clear");
+                || cmd.equals("pwd") || cmd.equals("clear") || cmd.equals("exit");
     }
 
 
@@ -192,13 +199,13 @@ public class Parser {
         else return terminal.ls();
     }
 
-    private String handleCat() {
+    private String handleCat() throws Exception {
         if(args.length==0){
             System.out.println("cat command takes at least 1 argument");
             return null;
         }
-        //ToDo handle CAT
-        return null;
+
+        return terminal.cat(args);
     }
 
     private String handleCp() throws Exception {
@@ -220,6 +227,23 @@ public class Parser {
         }
 
         return terminal.rm(args);
+    }
+
+    private String handleMore() throws IOException {
+        if (args.length != 1) {
+            for (String s :
+                    args) {
+                System.out.println(s);
+            }
+            System.out.println("more command takes 1 argument.");
+            return null;
+        }
+
+        File file = new File(terminal.setFilePath(args[0]));
+        if (file.exists()) terminal.more(file);
+        else terminal.more(args[0]);
+
+        return "";
     }
 
     private String handleMv() throws Exception {
@@ -256,6 +280,24 @@ public class Parser {
         }
 
         return terminal.Date();
+    }
+
+    private String handleArgs() throws Exception {
+        if (args.length != 1) {
+            System.out.println("args command takes 1 argument.");
+            return null;
+        }
+
+        return terminal.Args(args[0]);
+    }
+
+    private String handleHelp() {
+        if (args.length > 0) {
+            System.out.println("help command doesn't take any arguments.");
+            return null;
+        }
+
+        return terminal.Help();
     }
 
     public String getCmd() { return cmd; }
